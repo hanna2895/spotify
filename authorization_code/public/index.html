@@ -67,6 +67,8 @@
         /**
          * Obtains parameters from the hash of the URL
          * @return Object
+         * YOU NEED THIS BECAUSE WHEN SPOTIFY.COM SENT YOU TO /CALLBACK, IT ADDED ALL THE SALIENT DATA IN 
+         * THE QUERY STRING
          */
         function getHashParams() {
           var hashParams = {};
@@ -77,17 +79,24 @@
           }
           return hashParams;
         }
+        var params = getHashParams();
 
+
+
+        // this is just for showing user data in tutorial page (handlebars partial)
         var userProfileSource = document.getElementById('user-profile-template').innerHTML,
             userProfileTemplate = Handlebars.compile(userProfileSource),
             userProfilePlaceholder = document.getElementById('user-profile');
 
+        // this is for display oAuth token info in tutorial page (handlebars partial)
         var oauthSource = document.getElementById('oauth-template').innerHTML,
             oauthTemplate = Handlebars.compile(oauthSource),
             oauthPlaceholder = document.getElementById('oauth');
 
-        var params = getHashParams();
 
+
+
+        // this will pull the tokens from the query string once the entire authentication process is completed... which'll be how you are even looking at this page now
         var access_token = params.access_token,
             refresh_token = params.refresh_token,
             error = params.error;
@@ -95,6 +104,12 @@
         if (error) {
           alert('There was an error during the authentication');
         } else {
+
+          /************
+           *
+           * THIS IS WHERE YOU ACTUALLY USE THE TOKEN ON THE CLIENT SIDE TO GET STUFF FROM SPOTIFY
+           *
+           *************/
           if (access_token) {
             // render oauth info
             oauthPlaceholder.innerHTML = oauthTemplate({
@@ -102,12 +117,17 @@
               refresh_token: refresh_token
             });
 
+            //...for example in an ajax request like this
             $.ajax({
-                url: 'https://api.spotify.com/v1/me',
+                url: 'https://api.spotify.com/v1/me/playlists',
                 headers: {
                   'Authorization': 'Bearer ' + access_token
                 },
+
                 success: function(response) {
+
+                  // EXAMPLE of having used token to get stuff from spotify
+                  console.log(response) /// THIS IS THE "stuff"
                   userProfilePlaceholder.innerHTML = userProfileTemplate(response);
 
                   $('#login').hide();
@@ -120,6 +140,7 @@
               $('#loggedin').hide();
           }
 
+          // refresh token stuff
           document.getElementById('obtain-new-token').addEventListener('click', function() {
             $.ajax({
               url: '/refresh_token',
@@ -135,6 +156,7 @@
             });
           }, false);
         }
+        
       })();
     </script>
   </body>
